@@ -1,30 +1,9 @@
-//
-// subdivide.js
-//
-// PROGRAM 5
-//
-//    Surface.subdivide
-//
+
 // Author: Jim Fix
-// CSCI 385, Reed College, Spring 2022
+//
 //
 // This defines a class for representing a triangular mesh surface
-// class, one that uses a winged half-edge data structure.  The
-// assignment asks you to write the code for the method `subdivide`
-// that returns a new surface that results from a single Loop
-// subdivision of its edges and faces.
-//
-// ========
-//
-// ASSIGNMENT
-//
-// Write the code for `subdivide`.
-//
-// This is described carefully within the assignment specification,
-// and below I also hint at that coding in sections labelled with
-// "PROGRAM 6 INFO".
-//
-// ========
+// class, one that uses a winged half-edge data structure.
 //
 
 EPSILON = 1.0e-8

@@ -12,72 +12,21 @@
 // relationships with each other. It provides an oriented
 // representation that makes the connectivity amongst the components
 // navigable.
-//
-// The program provides two views of the surface:
-//
-// * A whole-object view that displays the entire surface from a
-//   distance.  The object can be reoriented in this diplay by
-//   dragging it within that portion of the GL canvas.
-//
-// * An on-surface view from the perspective of someone sitting on
-//   some facet of the surface. This starts with a view of a Tron
-//   cycle, placed on face #0 of the surface. The Tron cycle can be
-//   made to drive around on the surface, and so this view shows gives
-//   the perspective of that driver.
-//
-// The Tron cycle's movement showcases the traversal made possible by
-// the oriented surface representation of the mesh data structure.
+
 //
 // The drawing part of the code occurs in `drawViews` and relies
 // heavily on the `opengl.js` library. The surface is represented in
 // the file `surface.js`. This includes code that "compiles" the
 // surface (using `glBegin/glEnd`) so that it can be displayed both
 // with shading and as a wireframe mesh.
-//
-// ========
-//
-// the primary ASSIGNMENT
-//
-// To complete the assignment, your assignment is to modify the code
-// in `surface.js` so that it subdivides a surface. You write the
-// method `subdivide` in `class Surface` so that it returns a new
-// surface object, from a given one. It should do so using the Loop
-// subdivision scheme we described in lecture.
-//
-// The code below runs a Tron cycle game where the protaganist can
-// drive a cyle across the selected surface. The movement of the cycle
-// is controlled by kepresses `ijkl`. As the cycle moves across the
-// surface, its color is painted on the facets of the surface, and
-// so it leaves a trail behind it.
-//
-// This is a good way to verify that your subdivision step preserves
-// the surface's topology.
-//
-// ========
-//
-// an additional ENHANCEMENT
-//
-// Furthermore, the assignment description asks that you showcase the
-// surface data structure by enhancing the app. It gives several
-// suggestions for doing so.
-//
-// For example, you could modify the code below to introduce several
-// enemy cycles that drive across the surface, each a different color,
-// painting their own trail, and each controlled by some AI.
-//
-// You could then add win/lose conditions to the game. Cycles crash
-// when they hit the trail of another cyclist. If the player survives
-// and all the others crash, then the player WINS!
-//
-// ========
 
-//
+
 let gSurfaces       = new Map();
 let gSurfaceLibrary = new Map();
 let gSurfaceChoice  = "tetra";
 let gSurface        = null;
 //
-let gWidth = 1280;
+let gWidth = 640;
 let gHeight = 640;
 //
 let gOrientation = quatClass.for_rotation(0.00, new Vector3d(1.0,0.0,0.0));
@@ -112,7 +61,6 @@ function loadObjects() {
         });
     }
 }
-
 
 
 function makeEdgeObject() {
@@ -253,15 +201,15 @@ function drawEdgeObject(v1, v2, up, scale) {
 function drawEdges() {
 
   let edgelist = [];
-  let gradient = gSurface.forman_gradient();
-  //for (let e of gSurface.allEdges()) {
+  //let gradient = gSurface.forman_gradient();
+  for (let e of gSurface.allEdges()) {
 
-  for(let pair of gradient) {
-    let e = pair.edge;
+  //for(let pair of gradient) {
+    //let e = pair.edge;
     edgelist.push(e);
     //if(e.id == "0;1") {
     //if(!(edgelist.includes(e.twin)) ) {
-    //if(e.source.id < e.target.id) {
+    if(e.source.id < e.target.id) {
     let v1 = e.source;
     let v2 = e.target;
     let v2pos = v2.position;
@@ -270,7 +218,7 @@ function drawEdges() {
     let position = [(v1.position.x + v2.position.x)/2, (v1.position.y + v2.position.y)/2, (v1.position.z + v2.position.z)/2];
     let scale = vec.norm();
     drawEdgeObject(v1, v2, e.face.getNormal(), scale);
-  //}
+  }
   //}
   }
 }
@@ -323,7 +271,7 @@ function drawObjectView() {
 
         // Sit back a little from the object, fit it with some margin.
         //
-        glTranslatef(-1.0,0.0,0.0);
+        //glTranslatef(-1.0,0.0,0.0);
         glScalef(0.9,0.9,0.9);
 
 	    // Transform by the current trackball oriention.
@@ -341,7 +289,6 @@ function drawObjectView() {
         drawEdges();
       }
     }
-    //
     glPopMatrix();
 }
 
@@ -357,15 +304,18 @@ function drawViews() {
     glEnable(GL_DEPTH_TEST);
 
     // Draw the full-object view on the left.
-    glEnable(GL_SCISSOR_TEST);
-    glScissor(0, 0, gWidth - gHeight, gHeight);
+    //glEnable(GL_SCISSOR_TEST);
+    //glScissor(0, 0, gWidth - gHeight, gHeight);
     drawObjectView();
-    glDisable(GL_SCISSOR_TEST);
+    //glDisable(GL_SCISSOR_TEST);
 
+
+    /*
     // Draw the on-surface view on the right.
     glEnable(GL_SCISSOR_TEST);
     glScissor(gHeight, 0, gHeight, gHeight);
     glDisable(GL_SCISSOR_TEST);
+    */
 
     // Render everything.
     glFlush();
@@ -470,7 +420,6 @@ function viewer() {
      */
 
      // MAKE EDGE OBJECT
-
     makeEdgeObject();
 
     // set up GL/UT, its canvas, and other components.
