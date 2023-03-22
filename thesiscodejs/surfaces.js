@@ -18,12 +18,6 @@ EPSILON = 1.0e-8
 //
 // A vertex can be identifed within a surface by its `id`.
 //
-// ========
-//
-// PROGRAM 6 INFO: I've included a `clone` attribute that can be set
-//                 to refer to a new vertex created from this vertex
-//                 during subdivision.
-//
 // NOTE: You typically don't create a vertex directly. Rather, you use
 // the `Surface.makeVertex` method.
 //
@@ -194,7 +188,6 @@ class Edge {
 //
 // ========
 //
-// PROGRAM 6 INFO.
 //
 // NOTE: You typically don't create a face directly. Rather, you use
 // the `Surface.makeFace` method feeding it the identifiers of three
@@ -275,26 +268,7 @@ class Face {
 //
 // ========
 //
-// PROGRAM 6 INFO:
-//
-// Write the `subdivide` method listed below. Let `S` be the surface being
-// subdivided, and `R` be the refined `S` resulting from Loop subdivision.
-// That method should:
-//
-// 0. Create an empty `Surface` object that will be the refined surface `R`
-//
-// 1. Create a "clone" vertex within `R` of each vertex of `S`. Use `R.makeVertex`.
-//
-// 2. Create a "split" vertex within `R` from each edge of `S`. Use `R.makeVertex`.
-//
-// 3. Create all the (oriented) faces of `R` from, four faces for each face of `S`
-//    using the three cloned and splitting vertices built in Steps 1 and 2. These
-//    vertices should be built using `R.makeFace` with these vertices `id`s.
-//
-// 4. Return R.
-//
-// ========
-//
+
 class Surface {
 
     constructor(name,level=0) {
@@ -425,12 +399,9 @@ class Surface {
     }
 
 
-
 // ******************************************************
 // DMT ALGORITHMS
 
-
-// This method stores the heights of all the vertices in a dictionary
 // We can use the height function f(vertex) = vertex.y as our function in the Forman gradient algorithm
 
 forman_gradient() {
@@ -454,12 +425,12 @@ forman_gradient() {
     let pairs_weights = [];
     let pairs = get_pairs();
     for(let p of pairs) {
-      let v_height = p.vertex.position.y;
+      let v1_height = p.vertex.position.y;
       let v2_height = p.edge.source.position.y;
       if(p.edge.source.id == p.vertex.id) {
         v2_height = p.edge.target.position.y;
       }
-      let weight = (0.5 * (v_height + v2_height)) - v_height;
+      let weight = (0.5 * (v1_height + v2_height)) - v1_height;
       pairs_weights.push({pair: p, weight: weight});
     }
     return pairs_weights;
@@ -476,6 +447,15 @@ forman_gradient() {
   }
 
   //union find
+
+  function init(n) {
+    let parent = new Array(n);
+    for(let i = 0; i <= 1; i ++) {
+      parent[i] = i;
+    }
+    return parent;
+  }
+
   function find(parent, i) {
     if (parent[i] == i) {
       return i;
@@ -490,10 +470,9 @@ forman_gradient() {
   // takes in a list of vertices and a list of edges for a graph and returns true if the graph is cyclic
   function is_cyclic(vertices, edges) {
     // parent array to keep track of subsets
-    let parent = [];
     let vl = vertices.length;
     let el = edges.length;
-    parent = vertices;
+    let parent = init(vl);
 
     for(let i = 0; i < el; ++i) {
       let x = find(parent, edges[i].source.id);
@@ -540,9 +519,23 @@ forman_gradient() {
     return gradient;
   }
 
+
+/*
+  function paint_critical() {
+    for(let f of S.allFaces()) {
+      console.log(f.id);
+      if( f.id < 10) {
+        S.paint(f,{r:0.75, g:0.25, b:0.55} );
+      }
+    }
+  }
+*/
+
   let gradient = compute_gradient();
   return gradient;
 }
+
+
 
 // ********************************************************
 

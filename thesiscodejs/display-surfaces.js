@@ -1,6 +1,4 @@
-//
-// cycle-subdivide.js
-//
+
 // Author: Jim Fix
 // CSCI 385: Computer Graphics, Reed College, Spring 2022
 //
@@ -201,15 +199,15 @@ function drawEdgeObject(v1, v2, up, scale) {
 function drawEdges() {
 
   let edgelist = [];
-  //let gradient = gSurface.forman_gradient();
-  for (let e of gSurface.allEdges()) {
+  let gradient = gSurface.forman_gradient();
+  //for (let e of gSurface.allEdges()) {
 
-  //for(let pair of gradient) {
-    //let e = pair.edge;
+  for(let pair of gradient) {
+    let e = pair.edge;
     edgelist.push(e);
     //if(e.id == "0;1") {
     //if(!(edgelist.includes(e.twin)) ) {
-    if(e.source.id < e.target.id) {
+    //if(e.source.id < e.target.id) {
     let v1 = e.source;
     let v2 = e.target;
     let v2pos = v2.position;
@@ -218,7 +216,7 @@ function drawEdges() {
     let position = [(v1.position.x + v2.position.x)/2, (v1.position.y + v2.position.y)/2, (v1.position.z + v2.position.z)/2];
     let scale = vec.norm();
     drawEdgeObject(v1, v2, e.face.getNormal(), scale);
-  }
+  //}
   //}
   }
 }
@@ -326,18 +324,16 @@ function handleKey(key, x, y) {
      * Handle a keypress.
      */
 
+  //display the gradient
   if (key == "g") {
     gShowGradient = !gShowGradient;
-    //gSurface.forman_gradient();
   }
 
-    //
     // Turn wireframe on/off.
     if (key == "w") {
 	    gShowMesh = !gShowMesh;
     }
 
-    //
     glutPostRedisplay();
 }
 
