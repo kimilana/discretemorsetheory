@@ -240,6 +240,30 @@ class Face {
         const p2 = this.edge.next.target.position;
         return [p0,p1,p2];
     }
+
+    getUnorientedEdges(){
+      //
+      // Returns the three faces of the triangle
+      // Where only one half-edge is considered
+      //
+
+      let f = this;
+
+      let e1 = f.edge;
+      let e2 = f.edge.next;
+      let e3 = f.edge.prev;
+      // want to only use one of the half edges
+      if( (e1.source.id > e1.target.id) && e1.twin != null) {
+        e1 = e1.twin;
+      }
+      if((e2.source.id > e2.target.id) && e2.twin != null) {
+        e2 = e2.twin;
+      }
+      if((e3.source.id > e3.target.id) && e3.twin != null) {
+        e3 = e3.twin;
+      }
+      return [e1, e2, e3];
+    }
 }
 
 
@@ -408,29 +432,68 @@ forman_gradient() {
 
   const S = this;  //S is the surface
 
-  function get_pairs() {
+  //returns a list of face-vertex pairs of a surface
+  function edge_vertex_pairs() {
     let pairs = [];
     for (let e of S.allEdges()) {
-      if(e.source.id < e.target.id) {
+      if( (e.source.id < e.target.id) || e.twin == null) {
       let v1 = e.source;
       let v2 = e.target;
-      pairs.push({vertex: v1, edge: e});
-      pairs.push({vertex: v2, edge: e});
+      pairs.push({type: 0, vertex: v1, edge: e});
+      pairs.push({type: 0, vertex: v2, edge: e});
     }
     }
     return pairs;
   }
 
-  function compute_weights() {
+  //returns a list of edge-face pairs of the surface
+  function face_edge_pairs() {
+    let pairs = [];
+    for (let f of S.allFaces()) {
+      let edges = f.getUnorientedEdges();
+      let e1 = edges[0];
+      let e2 = edges[1];
+      let e3 = edges[2];
+      pairs.push({type: 1, edge: e1, face: f});
+      pairs.push({type: 1, edge: e2, face: f});
+      pairs.push({type: 1, edge: e3, face: f});
+    }
+    return pairs;
+  }
+
+  //computes the weight of an edge
+  //where the weight is the mean of the values of the vertices
+  function compute_edge_mean(e) {
+    let v1_val = e.source.position.y;
+    let v2_val = e.target.position.y;
+    return (0.5 * (v1_val + v2_val));
+  }
+
+  //computes the weight of a face
+  function compute_face_mean(f) {
+     let vertex_pos = f.getPoints();
+     let v1_val = vertex_pos[0].y;
+     let v2_val = vertex_pos[1].y;
+     let v3_val = vertex_pos[2].y;
+     return ( (v1_val + v2_val + v3_val) / 3 );
+  }
+
+  //returns a list of each pair and its weight
+  function edge_vertex_weights() {
     let pairs_weights = [];
-    let pairs = get_pairs();
+    let pairs = edge_vertex_pairs();
     for(let p of pairs) {
-      let v1_height = p.vertex.position.y;
-      let v2_height = p.edge.source.position.y;
-      if(p.edge.source.id == p.vertex.id) {
-        v2_height = p.edge.target.position.y;
-      }
-      let weight = (0.5 * (v1_height + v2_height)) - v1_height;
+      let weight = compute_edge_mean(p.edge) - p.vertex.position.y;
+      pairs_weights.push({pair: p, weight: weight});
+    }
+    return pairs_weights;
+  }
+
+  function face_edge_weights() {
+    let pairs_weights = [];
+    let pairs = face_edge_pairs();
+    for(let p of pairs) {
+      let weight = compute_face_mean(p.face) - compute_edge_mean(p.edge);
       pairs_weights.push({pair: p, weight: weight});
     }
     return pairs_weights;
@@ -441,81 +504,41 @@ forman_gradient() {
   }
 
   function sort_weights(pairs_weights) {
-    pairs_weights = compute_weights();
-    let sorted_weights = pairs_weights.sort(custom_compare);
+    let sorted = pairs_weights.sort(custom_compare);
+    return sorted;
+  }
+
+  function compute_sorted_weights() {
+    let fe_weights = face_edge_weights();
+    let ev_weights = edge_vertex_weights();
+    let weights = fe_weights.concat(ev_weights);
+    let sorted_weights = sort_weights(weights);
     return sorted_weights;
   }
 
-  //union find
-
-  function init(n) {
-    let parent = new Array(n);
-    for(let i = 0; i <= 1; i ++) {
-      parent[i] = i;
-    }
-    return parent;
-  }
-
-  function find(parent, i) {
-    if (parent[i] == i) {
-      return i;
-    }
-    return find(parent, parent[i]);
-  }
-
-  function union(parent, x, y) {
-    parent[x] = [y];
-  }
-
-  // takes in a list of vertices and a list of edges for a graph and returns true if the graph is cyclic
-  function is_cyclic(vertices, edges) {
-    // parent array to keep track of subsets
-    let vl = vertices.length;
-    let el = edges.length;
-    let parent = init(vl);
-
-    for(let i = 0; i < el; ++i) {
-      let x = find(parent, edges[i].source.id);
-      let y = find(parent, edges[i].target.id);
-
-      if (x == y) {
-        return true;
-        union(parent, x, y);
-      }
-      return false;
-    }
-  }
-
   function compute_gradient() {
-    let pairs_weights = sort_weights(compute_weights());
-
-    //let test_vertices = [0, 1, 2];
-    //let test_edges = [{source:0, target: 1}, {source:1, target: 2}, {source:0, target: 2}];
-
-    //let val = is_cyclic(test_vertices, test_edges);
-    //console.log(val);
+    let pairs_weights = compute_sorted_weights();
 
     let gradient = [];
-    let edge_list = [];
-    let vertex_list = [];
+    let matched = [];
 
     //iterate through pairs sorted by weight
     for(let w of pairs_weights) {
       let p = w.pair;
-      //test if edge or vertex in pair has already been matched
-      if( !( vertex_list.includes(p.vertex.id) || edge_list.includes(p.edge) )) {
-        vertex_list.push(p.vertex.id);
-        edge_list.push(p.edge);
 
-        //test if adding the pair will create a cycle
-        if(! is_cyclic(vertex_list, edge_list) ) {
-          gradient.push(p);
-        } else {
-          vertex_list.pop();
-          edge_list.pop();
-        }
+      //test if edge or vertex in pair has already been matched
+    if( p.type == 0 && (!matched.includes(p.vertex) && !matched.includes(p.edge) ) ) {
+      gradient.push(p);
+      matched.push(p.vertex);
+      matched.push(p.edge);
+    } else if(p.type == 1 && (!matched.includes(p.edge) && !matched.includes(p.face)) ) {
+      gradient.push(p);
+      matched.push(p.edge);
+      matched.push(p.face);
     }
   }
+
+  console.log(gradient);
     return gradient;
   }
 
@@ -530,7 +553,6 @@ forman_gradient() {
     }
   }
 */
-
   let gradient = compute_gradient();
   return gradient;
 }

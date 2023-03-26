@@ -500,7 +500,15 @@ f 1 5 6
 f 1 6 2
 f 2 6 8
 f 2 8 4
-  </script>
+</script>
+
+<script id="triangle.obj" type="text/html">
+v -1.0 -1.0 1.0
+v -1.0 1.0 1.0
+v 1.0 1.0 1.0
+f 1 2 3
+</script>
+
   <script id="torus.obj" type="text/html">
 v 1.5 0.0 0.0
 v 1.3535533905932737 0.0 0.35355339059327373
@@ -1925,6 +1933,8 @@ f 51 54 59
        <label for="torus">torus</label>
        <input type="radio" name="surface" value="stell" id="stell">
        <label for="stell">small stellated dodecahedron</label>
+       <input type="radio" name="surface" value="triangle" id="triangle">
+       <label for="triangle">triangle</label>
      </div>
 
    </font>

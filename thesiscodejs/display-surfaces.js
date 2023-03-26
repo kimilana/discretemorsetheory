@@ -63,9 +63,9 @@ function loadObjects() {
 
 function makeEdgeObject() {
     const width = 0.6;
-    const numFacets = 24;
+    const numFacets = 6;
     const dAngle = 2.0 * Math.PI / numFacets;
-    const r = 0.02;
+    const r = 0.015;
 
     glBegin(GL_TRIANGLES, "my-arrow", true);
 
@@ -78,16 +78,15 @@ function makeEdgeObject() {
         const yTop1 = Math.sin(aTop + dAngle) * (2* r);
 
         if (i % 2 == 0) {
-      glColor3f(1.0, 0.0, 0.0);
+      glColor3f(1.0, 0.8, 0.0);
   } else {
-      glColor3f(1.0, 1.0, 0.0);
+      glColor3f(1.0, 0.8, 0.0);
   }
 
         glVertex3f(0.0, 0.0, (width-0.2) / 2.0);
         glVertex3f(xTop0, yTop0, (width-0.2) / 2.0);
         glVertex3f(xTop1, yTop1, (width-0.2) / 2.0);
     }
-
 
     // Produce the sides of the cylinder
     for (let i = 0; i < numFacets; i += 1) {
@@ -119,7 +118,7 @@ function makeEdgeObject() {
     if (i % 2 == 0) {
 	    glColor3f(1.0, 0.0, 0.0);
 	} else {
-	    glColor3f(1.0, 1.0, 0.0);
+	    glColor3f(1.0, 0.0, 0.0);
 	}
 
 	glVertex3f(     0.0,      0.0, (-width) / 2.0);
@@ -136,9 +135,9 @@ function makeEdgeObject() {
         const yTop1 = Math.sin(aTop + dAngle) * (2 * r);
 
         if (i % 2 == 0) {
-      glColor3f(1.0, 0.0, 0.0);
+      glColor3f(1.0, 0.8, 0.0);
   } else {
-      glColor3f(1.0, 1.0, 0.0);
+      glColor3f(1.0, 0.8, 0.0);
   }
 
        glVertex3f(  0.0,   0.0 , (width-0.2) /2 + 0.2);
@@ -185,12 +184,14 @@ function makeObject(objname, objtext) {
     gSurfaces.set(objname,surface);
 }
 
+
+
 function drawEdgeObject(v1, v2, up, scale) {
-  let l = v1.position.combo(0.5, v2.position);
+  let l = v1.combo(0.5, v2); //location
   glPushMatrix();
   glTranslatef(l.x, l.y, l.z);
   glScalef(scale, scale, scale);
-  let toward = (v2.position.minus(v1.position)).unit();
+  let toward = (v2.minus(v1)).unit();
   ifkReorient(toward, up.unit());
   glBeginEnd("my-arrow");
   glPopMatrix();
@@ -203,22 +204,42 @@ function drawEdges() {
   //for (let e of gSurface.allEdges()) {
 
   for(let pair of gradient) {
+
+    if(pair.type == 0) {
+
     let e = pair.edge;
     edgelist.push(e);
     //if(e.id == "0;1") {
     //if(!(edgelist.includes(e.twin)) ) {
-    //if(e.source.id < e.target.id) {
-    let v1 = e.source;
-    let v2 = e.target;
-    let v2pos = v2.position;
-    let vec = (v1.position).minus(v2.position);
-    let theta = 0.0;
-    let position = [(v1.position.x + v2.position.x)/2, (v1.position.y + v2.position.y)/2, (v1.position.z + v2.position.z)/2];
+    //if(e.source.id < e.target.id || e.twin == null) {
+    let v1 = e.source.position;
+    let v2 = e.target.position;
+    let vec = (v1).minus(v2);
     let scale = vec.norm();
     drawEdgeObject(v1, v2, e.face.getNormal(), scale);
-  //}
-  //}
   }
+
+  //}
+  //}
+
+  if(pair.type == 1) {
+  //for (let f of gSurface.allFaces()) {
+      let f = pair.face;
+      let edge = pair.edge; 
+      let points = f.getPoints();
+      let fv1 = points[0];
+      let fv2 = points[1];
+      let fv3 = points[2];
+      let center = new Point3d((fv1.x + fv2.x + fv3.x) /3, (fv1.y + fv2.y + fv3.y) /3, (fv1.z + fv2.z + fv3.z)/3);
+      let p1 = edge.source.position.combo(0.5, edge.target.position);
+      let fvec = p1.minus(center);
+      let fscale = 1.5 * fvec.norm();
+      drawEdgeObject(p1, center, f.getNormal(), fscale);
+    }
+
+  //}
+}
+
 }
 
 
@@ -327,6 +348,9 @@ function handleKey(key, x, y) {
   //display the gradient
   if (key == "g") {
     gShowGradient = !gShowGradient;
+  }
+  if (key == "f") {
+    gSurface.forman_gradient();
   }
 
     // Turn wireframe on/off.
