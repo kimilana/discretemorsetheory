@@ -9,6 +9,138 @@
 EPSILON = 1.0e-8
 
 
+class DirectedHasse {
+  constructor(simplices, pairs, gradient) {
+      this.nodes = new Map();
+      for(let i = 0; i < simplices.length; i++) {
+        this.nodes.set(simplices[i], i);
+      }
+      this.numNodes = simplices.length;
+      this.pairs = pairs;
+      this.gradient = gradient;
+      this.init_matrix();
+      this.init_closure();
+  }
+
+  init_matrix() {
+  this.matrix = new Array(this.numNodes);
+  for(let i = 0; i < this.numNodes; i++) {
+       this.matrix[i] = new Array(this.numNodes);
+       for(let j = 0; j < this.numNodes; j++) {
+          this.matrix[i][j] = 0;
+       }
+     }
+     this.set_hasse_matrix();
+  }
+
+  init_closure() {
+  this.closure = new Array(this.numNodes);
+  for(let i = 0; i < this.numNodes; i++) {
+       this.closure[i] = new Array(this.numNodes);
+       for(let j = 0; j < this.numNodes; j++) {
+          this.closure[i][j] = this.matrix[i][j];
+       }
+       this.closure[i][i] = 1;
+     }
+     this.set_hasse_closure();
+  }
+
+  set_hasse_matrix() {
+    for(let p of this.pairs) {
+      if(p.type == 0) { //edge-vertex pair
+        let e = this.nodes.get(p.edge);
+        let v = this.nodes.get(p.vertex);
+        this.matrix[e][v] = 1; //downward arrow from edge to face
+      }
+      if(p.type == 1) { //face-edge pair
+        let f = this.nodes.get(p.face);
+        let e = this.nodes.get(p.edge);
+        this.matrix[f][e] = 1; //downward arrow from face to edge
+      }
+    }
+    //reverse the arrows on the gradient
+    for(let g of this.gradient) {
+      if(g.type == 0) { //edge-vertex pair
+        let e = this.nodes.get(g.edge);
+        let v = this.nodes.get(g.vertex);
+        this.matrix[e][v] = 0;
+        this.matrix[v][e] = 1; //upward arrow from vertex to edge
+      }
+      if(g.type == 1) { //face-edge pair
+        let f = this.nodes.get(g.face);
+        let e = this.nodes.get(g.edge);
+        this.matrix[f][e] = 1;
+        this.matrix[e][f] = 1; //upward arrow from edge to face
+      }
+    }
+  }
+
+  set_hasse_closure() {
+    //initialize paths between nodes connected by 1 edge
+    //and between a node and itself
+    let n = this.numNodes;
+    for(let i = 0; i < n; i++) {
+      for(let j = 0; j < n; j++) {
+        if(this.matrix[i][j] == 1) { //1-edge paths
+          this.closure[i][j] == 1;
+        }
+        this.closure[i][i] == 1;
+      }
+      for(let k = 0; k < n; k++) {
+        for(let i = 0; i < n; i++) {
+          for(let j = 0; j < n; j++) {
+            if(this.closure[i][k] == 1 && this.closure[k][j] == 1) {
+              this.closure[i][j] == 1;
+            }
+          }
+        }
+      }
+
+    }
+  }
+
+  insert(i,j) {
+    this.matrix[i][j] = 1;
+    if(this.closure[i][j] == 0) {
+      for(k = 0; k < n; k++) {
+        if(this.closure[k][j] == 0 && this.closure[k][i] == 1) {
+          this.closure.adapt(j,k)
+        }
+      }
+    }
+  }
+
+  adapt(j,k) {
+    let marked = new Array(this.numNodes);
+    for(let i = 0; i < this.numNodes; i++) {
+      marked[i] = false;
+    }
+    marked[j] = true;
+    let Q = [];
+    Q.push(j);
+    while(!Q.length == 0) {
+      let l = Q.pop();
+      for(let m = 0; m < this.numNodes; m++) {
+        if(this.matrix[l][m] == 1) { //if there is an edge from l to m
+          if(this.closure[k][m] == 0 && !marked.includes(m)) {
+            this.closure[k][m] = 1;
+            marked[m] = true;
+            Q.push[m];
+          }
+        }
+      }
+    }
+  }
+
+  delete() {
+
+  }
+
+
+}
+
+
+
 //
 // class Vertex
 //
@@ -307,7 +439,7 @@ class Surface {
         this.numVertices = 0;        // Count used for vertex IDs.
         this.edges = new Map();
         this.faces = [];
-        //
+        this.numEdges = 0;
         this.nameBase = name;
         this.level = level;
     }
@@ -401,6 +533,16 @@ class Surface {
         return e;
     }
 
+    countEdges() {
+      let num = 0;
+      for(let e of this.allEdges()) {
+      if( (e.source.id < e.target.id) || e.twin == null) {
+        num++
+      }
+      }
+      return num;
+    }
+
     makeFace(vi0,vi1,vi2,id=null) {
         //
         // Adds a new oriented triangular face around the given vertices.
@@ -432,6 +574,22 @@ forman_gradient() {
 
   const S = this;  //S is the surface
 
+  function get_simplices() {
+    let simplices = [];
+    for (let v of S.allVertices()) {
+      simplices.push(v);
+    }
+    for (let e of S.allEdges()) {
+      if( (e.source.id < e.target.id) || e.twin == null) {
+        simplices.push(e)
+      }
+    }
+      for (let f of S.allFaces()) {
+        simplices.push(f);
+    }
+    return simplices;
+  }
+
   //returns a list of face-vertex pairs of a surface
   function edge_vertex_pairs() {
     let pairs = [];
@@ -460,6 +618,7 @@ forman_gradient() {
     }
     return pairs;
   }
+
 
   //computes the weight of an edge
   //where the weight is the mean of the values of the vertices
@@ -518,19 +677,29 @@ forman_gradient() {
 
   function compute_gradient() {
     let pairs_weights = compute_sorted_weights();
+    let simplices = get_simplices();
 
+    let pairs = [];
     let gradient = [];
     let matched = [];
 
     //iterate through pairs sorted by weight
     for(let w of pairs_weights) {
       let p = w.pair;
+      pairs.push(p);
 
       //test if edge or vertex in pair has already been matched
     if( p.type == 0 && (!matched.includes(p.vertex) && !matched.includes(p.edge) ) ) {
+      let H = new DirectedHasse(simplices, pairs, gradient);
+      let e = H.nodes.get(p.edge);
+      let v = H.nodes.get(p.vertex);
+      //H.insert(v,e);
+      console.log(H.matrix);
+
       gradient.push(p);
       matched.push(p.vertex);
       matched.push(p.edge);
+
     } else if(p.type == 1 && (!matched.includes(p.edge) && !matched.includes(p.face)) ) {
       gradient.push(p);
       matched.push(p.edge);
@@ -538,8 +707,7 @@ forman_gradient() {
     }
   }
 
-  console.log(gradient);
-    return gradient;
+  return gradient;
   }
 
 
@@ -553,6 +721,10 @@ forman_gradient() {
     }
   }
 */
+
+  //H.init_matrix(nodes.length);
+  //H.insert(1,1);
+  //console.log(H.matrix);
   let gradient = compute_gradient();
   return gradient;
 }

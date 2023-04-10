@@ -197,10 +197,11 @@ function drawEdgeObject(v1, v2, up, scale) {
   glPopMatrix();
 }
 
-function drawEdges() {
 
+function drawEdges() {
+  let gradient = gSurface.forman_gradient();g
   let edgelist = [];
-  let gradient = gSurface.forman_gradient();
+
   //for (let e of gSurface.allEdges()) {
 
   for(let pair of gradient) {
@@ -225,7 +226,7 @@ function drawEdges() {
   if(pair.type == 1) {
   //for (let f of gSurface.allFaces()) {
       let f = pair.face;
-      let edge = pair.edge; 
+      let edge = pair.edge;
       let points = f.getPoints();
       let fv1 = points[0];
       let fv2 = points[1];
