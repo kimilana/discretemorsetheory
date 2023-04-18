@@ -5,7 +5,7 @@ dangle = smoothness * math.pi / 180
 r1 = 1.0 #major radius
 r2 = 0.5 #minor radius
 
-torus_file = open("torus_medium.obj", "w")
+torus_file = open("torus_60.obj", "w")
 num = int(2*math.pi / dangle)
 count = 0
 

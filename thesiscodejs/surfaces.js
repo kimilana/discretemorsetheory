@@ -35,10 +35,13 @@ class DirectedHasse {
 
   init_closure() {
   this.closure = new Array(this.numNodes);
+  //this.N = new Array(this.numNodes);
   for(let i = 0; i < this.numNodes; i++) {
-       this.closure[i] = new Array(this.numNodes);
+      this.closure[i] = new Array(this.numNodes);
+    //  this.N[i] = new Array(this.numNodes);
        for(let j = 0; j < this.numNodes; j++) {
           this.closure[i][j] = this.matrix[i][j];
+        //  this.N[i][j] = 0;
        }
        this.closure[i][i] = 1;
      }
@@ -58,6 +61,7 @@ class DirectedHasse {
         this.matrix[f][e] = 1; //downward arrow from face to edge
       }
     }
+    /*
     //reverse the arrows on the gradient
     for(let g of this.gradient) {
       if(g.type == 0) { //edge-vertex pair
@@ -72,6 +76,15 @@ class DirectedHasse {
         this.matrix[f][e] = 1;
         this.matrix[e][f] = 1; //upward arrow from edge to face
       }
+
+    }
+    */
+  }
+
+  is_cyclic(i,j) {
+    let visited = new Array(this.numNodes);
+    for(let i = 0; i < this.numNodes; i++) {
+      visited[i] = false;
     }
   }
 
@@ -86,54 +99,108 @@ class DirectedHasse {
         }
         this.closure[i][i] == 1;
       }
+    }
       for(let k = 0; k < n; k++) {
         for(let i = 0; i < n; i++) {
           for(let j = 0; j < n; j++) {
             if(this.closure[i][k] == 1 && this.closure[k][j] == 1) {
-              this.closure[i][j] == 1;
+              this.closure[i][j] = 1; //j is reachable from i
             }
+          //  if(this.matrix[j][i]==1 && this.closure[k][j] == 1) {
+          //    this.N[k][i] += 1;
+          //  }
+          }
+        }
+    }
+    this.N = this.computeN();
+
+  }
+
+
+  computeN() {
+    let n = this.numNodes;
+    let N = new Array(n);
+    for(let d = 0; d < n; d++) {
+      N[d] = new Array(n).fill(0);
+    }
+    for(let a = 0; a < n; a++) {
+      for(let b = 0; b < n; b++) {
+        for(let c = 0; c < n; c++) {
+          if(this.matrix[c][b]==1 && this.closure[a][c] == 1) {
+            N[a][b] += 1;
           }
         }
       }
-
     }
+    return N;
   }
 
   insert(i,j) {
-    this.matrix[i][j] = 1;
-    if(this.closure[i][j] == 0) {
-      for(k = 0; k < n; k++) {
-        if(this.closure[k][j] == 0 && this.closure[k][i] == 1) {
-          this.closure.adapt(j,k)
+    this.matrix[i][j] = 1; //edge from i to j
+    if(this.closure[i][j] == 0) { //if j is not reachable from i
+      for(let k = 0; k < this.numNodes; k++) {
+        if(this.closure[k][j] == 0 && this.closure[k][i] == 1) { //
+          this.adapt(k,j); //there is a path from k to j
         }
       }
     }
+    this.N = this.computeN();
   }
 
-  adapt(j,k) {
+  adapt(k,j) {
     let marked = new Array(this.numNodes);
     for(let i = 0; i < this.numNodes; i++) {
       marked[i] = false;
     }
     marked[j] = true;
     let Q = [];
-    Q.push(j);
-    while(!Q.length == 0) {
+    Q.push(j); //j is reachable from k
+    while(Q.length != 0) {
       let l = Q.pop();
+      this.closure[k][l] = 1; //l is now reachable from k
+      marked[l] = true;
       for(let m = 0; m < this.numNodes; m++) {
         if(this.matrix[l][m] == 1) { //if there is an edge from l to m
-          if(this.closure[k][m] == 0 && !marked.includes(m)) {
-            this.closure[k][m] = 1;
-            marked[m] = true;
-            Q.push[m];
+          if(this.closure[k][m] == 0 && marked[m] == false) { //if m is not reachable from k
+            Q.push(m); //m is reachable from k
           }
         }
       }
     }
   }
 
-  delete() {
+  delete(i,j) {
+  let n = this.numNodes;
+  this.matrix[i][j] = 0; //remove edge from i to j
+  for(let k = 0; k < n; k++) {
+    if(this.closure[k][i] == 1) { //if i is reachable from k
+      if(this.N[k][j] == 1) { //if j is only reachable from k through i
+        this.N[k][j] -= 1; //j is no longer reachable from k
+        this.adjust(j,k);
+      }
+      if(this.N[k][j] > 1) {
+        this.N[k][j] -= 1;
+      }
+    }
+  }
+  }
 
+  adjust(j,k) {
+    let n = this.numNodes;
+    let R = []; //red nodes
+    R.push(j); //j is no longer reachable from k
+    while(R.length != 0) {
+      let l = R.pop();
+      this.closure[k][l] = 0; //l is no longer reachable from k
+      for(let m = 0; m < n; m++) {
+        if(this.matrix[l][m] == 1) { //if there's an edge from l to m
+          this.N[k][m] -= 1; //m is no longer reachable from k through l
+          if(this.N[k][m] == 0) { //if there are no more paths from k to m
+            R.push(m); //m is no longer reachable from k
+          }
+        }
+      }
+    }
   }
 
 
@@ -682,28 +749,43 @@ forman_gradient() {
     let pairs = [];
     let gradient = [];
     let matched = [];
+    for(let w of pairs_weights) {
+      let p = w.pair;
+      pairs.push(p);
+    }
+    let H = new DirectedHasse(simplices, pairs, gradient);
 
     //iterate through pairs sorted by weight
     for(let w of pairs_weights) {
       let p = w.pair;
-      pairs.push(p);
-
       //test if edge or vertex in pair has already been matched
     if( p.type == 0 && (!matched.includes(p.vertex) && !matched.includes(p.edge) ) ) {
-      let H = new DirectedHasse(simplices, pairs, gradient);
       let e = H.nodes.get(p.edge);
       let v = H.nodes.get(p.vertex);
-      //H.insert(v,e);
-      console.log(H.matrix);
-
-      gradient.push(p);
-      matched.push(p.vertex);
-      matched.push(p.edge);
+      //test if adding pair will create a cycle
+      H.delete(e,v);
+      if(H.closure[e][v] == 1) {
+        H.insert(e,v); //don't reverse edge
+      } else {
+        H.insert(v,e); //reverse edge
+        gradient.push(p); //add pair to gradient
+        matched.push(p.vertex);
+        matched.push(p.edge);
+    }
 
     } else if(p.type == 1 && (!matched.includes(p.edge) && !matched.includes(p.face)) ) {
+      let f = H.nodes.get(p.face);
+      let e = H.nodes.get(p.edge);
+      //test if adding pair will create a cycle
+      H.delete(f,e);
+      if(H.closure[f][e] == 1) {
+      H.insert(f,e);
+    } else {
+      H.insert(e,f);
       gradient.push(p);
       matched.push(p.edge);
       matched.push(p.face);
+    }
     }
   }
 

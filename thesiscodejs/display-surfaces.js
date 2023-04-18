@@ -36,10 +36,12 @@ let gLightPosition = new Point3d(-1.5, 0.875, -1.0);
 let gShowMesh      = true;
 let gShowGradient      = true;
 //
+let gradient = "null";
 
 function chooseSurface(objname) {
     gSurfaceChoice = objname;
     gSurface =  gSurfaces.get(gSurfaceChoice);
+    gradient = "null";
 }
 
 function loadObjects() {
@@ -199,7 +201,10 @@ function drawEdgeObject(v1, v2, up, scale) {
 
 
 function drawEdges() {
-  let gradient = gSurface.forman_gradient();g
+  if(gradient == "null") {
+    gradient = gSurface.forman_gradient();
+  }
+
   let edgelist = [];
 
   //for (let e of gSurface.allEdges()) {
