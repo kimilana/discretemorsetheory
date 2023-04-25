@@ -10,14 +10,13 @@ EPSILON = 1.0e-8
 
 
 class DirectedHasse {
-  constructor(simplices, pairs, gradient) {
+  constructor(simplices, pairs) {
       this.nodes = new Map();
       for(let i = 0; i < simplices.length; i++) {
         this.nodes.set(simplices[i], i);
       }
       this.numNodes = simplices.length;
       this.pairs = pairs;
-      this.gradient = gradient;
       this.init_matrix();
       this.init_closure();
   }
@@ -35,13 +34,13 @@ class DirectedHasse {
 
   init_closure() {
   this.closure = new Array(this.numNodes);
-  //this.N = new Array(this.numNodes);
+  this.N = new Array(this.numNodes);
   for(let i = 0; i < this.numNodes; i++) {
       this.closure[i] = new Array(this.numNodes);
-    //  this.N[i] = new Array(this.numNodes);
+      this.N[i] = new Array(this.numNodes);
        for(let j = 0; j < this.numNodes; j++) {
           this.closure[i][j] = this.matrix[i][j];
-        //  this.N[i][j] = 0;
+          this.N[i][j] = 0;
        }
        this.closure[i][i] = 1;
      }
@@ -61,31 +60,7 @@ class DirectedHasse {
         this.matrix[f][e] = 1; //downward arrow from face to edge
       }
     }
-    /*
-    //reverse the arrows on the gradient
-    for(let g of this.gradient) {
-      if(g.type == 0) { //edge-vertex pair
-        let e = this.nodes.get(g.edge);
-        let v = this.nodes.get(g.vertex);
-        this.matrix[e][v] = 0;
-        this.matrix[v][e] = 1; //upward arrow from vertex to edge
-      }
-      if(g.type == 1) { //face-edge pair
-        let f = this.nodes.get(g.face);
-        let e = this.nodes.get(g.edge);
-        this.matrix[f][e] = 1;
-        this.matrix[e][f] = 1; //upward arrow from edge to face
-      }
 
-    }
-    */
-  }
-
-  is_cyclic(i,j) {
-    let visited = new Array(this.numNodes);
-    for(let i = 0; i < this.numNodes; i++) {
-      visited[i] = false;
-    }
   }
 
   set_hasse_closure() {
@@ -106,13 +81,13 @@ class DirectedHasse {
             if(this.closure[i][k] == 1 && this.closure[k][j] == 1) {
               this.closure[i][j] = 1; //j is reachable from i
             }
-          //  if(this.matrix[j][i]==1 && this.closure[k][j] == 1) {
-          //    this.N[k][i] += 1;
-          //  }
+            if(this.matrix[j][i]==1 && this.closure[k][j] == 1) {
+              this.N[k][i] += 1;
+            }
           }
         }
     }
-    this.N = this.computeN();
+    //this.N = this.computeN();
 
   }
 
@@ -135,6 +110,14 @@ class DirectedHasse {
     return N;
   }
 
+  increment_paths(i,j) { //j is reachable from i
+    for(let m = 0; m < this.numNodes; m++) {
+      if(this.matrix[j][m] == 1) { //for all edges (j,m)
+        this.N[i][m] += 1;
+      }
+    }
+  }
+
   insert(i,j) {
     this.matrix[i][j] = 1; //edge from i to j
     if(this.closure[i][j] == 0) { //if j is not reachable from i
@@ -144,7 +127,7 @@ class DirectedHasse {
         }
       }
     }
-    this.N = this.computeN();
+    //this.N = this.computeN();
   }
 
   adapt(k,j) {
@@ -155,6 +138,7 @@ class DirectedHasse {
     marked[j] = true;
     let Q = [];
     Q.push(j); //j is reachable from k
+    this.increment_paths(k,j); //update N
     while(Q.length != 0) {
       let l = Q.pop();
       this.closure[k][l] = 1; //l is now reachable from k
@@ -163,6 +147,7 @@ class DirectedHasse {
         if(this.matrix[l][m] == 1) { //if there is an edge from l to m
           if(this.closure[k][m] == 0 && marked[m] == false) { //if m is not reachable from k
             Q.push(m); //m is reachable from k
+            this.increment_paths(k,m); //update N
           }
         }
       }
@@ -753,7 +738,7 @@ forman_gradient() {
       let p = w.pair;
       pairs.push(p);
     }
-    let H = new DirectedHasse(simplices, pairs, gradient);
+    let H = new DirectedHasse(simplices, pairs);
 
     //iterate through pairs sorted by weight
     for(let w of pairs_weights) {
@@ -976,13 +961,19 @@ forman_gradient() {
 	    //
 	    // It makes a series of glVertex3fv and glNormal3fv calls.
 	    //
+
+      //for blue/green, change value to 0.25
         glBegin(GL_TRIANGLES, this.getName(), harlequin);
+
 	    for (let f of this.allFaces()) {
+          glColor3f(0.6, 0.6, 0.6);
+        /*
             if (harlequin) {
                 glColor3f(0.25*Math.random()*0.25,
 		                  0.25+Math.random()*0.25,
 		                  0.25+Math.random()*0.25);
             }
+            */
 	        f.getNormal().glNormal3fv();
             const ps = f.getPoints();
 	        ps[0].glVertex3fv();

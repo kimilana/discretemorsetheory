@@ -65,7 +65,7 @@ function loadObjects() {
 
 function makeEdgeObject() {
     const width = 0.6;
-    const numFacets = 6;
+    const numFacets = 12;
     const dAngle = 2.0 * Math.PI / numFacets;
     const r = 0.015;
 
@@ -79,11 +79,16 @@ function makeEdgeObject() {
         const xTop1 = Math.cos(aTop + dAngle) * (2 * r);
         const yTop1 = Math.sin(aTop + dAngle) * (2* r);
 
+        glColor3f(0.04, 0.32, 0.59);
+
+/*
         if (i % 2 == 0) {
       glColor3f(1.0, 0.8, 0.0);
   } else {
       glColor3f(1.0, 0.8, 0.0);
   }
+
+*/
 
         glVertex3f(0.0, 0.0, (width-0.2) / 2.0);
         glVertex3f(xTop0, yTop0, (width-0.2) / 2.0);
@@ -98,12 +103,13 @@ function makeEdgeObject() {
         const xMid1 = Math.cos(aMid + dAngle) * r;
         const yMid1 = Math.sin(aMid + dAngle) * r;
 
-  glColor3f(1.0, 0.0, 0.0);
+    glColor3f(0.29, 0.57, 0.87);
+  //glColor3f(1.0, 0.0, 0.0);
         glVertex3f(xMid0, yMid0,  width / 2.0);
         glVertex3f(xMid0, yMid0, -width / 2.0);
         glVertex3f(xMid1, yMid1, -width / 2.0);
-
-	  glColor3f(1.0, 1.0, 0.0);
+    glColor3f(0.04, 0.32, 0.59);
+	  //glColor3f(0.04, 0.32, 0.59);
         glVertex3f(xMid0, yMid0,  width / 2.0);
         glVertex3f(xMid1, yMid1, -width / 2.0);
         glVertex3f(xMid1, yMid1,  width / 2.0);
@@ -117,11 +123,15 @@ function makeEdgeObject() {
         const xBottom1 = Math.cos(aBottom + dAngle) * r;
         const yBottom1 = Math.sin(aBottom + dAngle) * r;
 
+    glColor3f(0.29, 0.57, 0.87);
+
+/*
     if (i % 2 == 0) {
 	    glColor3f(1.0, 0.0, 0.0);
 	} else {
 	    glColor3f(1.0, 0.0, 0.0);
 	}
+*/
 
 	glVertex3f(     0.0,      0.0, (-width) / 2.0);
         glVertex3f(xBottom0, yBottom0, (-width) / 2.0);
@@ -136,12 +146,16 @@ function makeEdgeObject() {
         const xTop1 = Math.cos(aTop + dAngle) * (2 * r);
         const yTop1 = Math.sin(aTop + dAngle) * (2 * r);
 
+  glColor3f(0.04, 0.32, 0.59);
+
+
+/*
         if (i % 2 == 0) {
       glColor3f(1.0, 0.8, 0.0);
   } else {
       glColor3f(1.0, 0.8, 0.0);
   }
-
+*/
        glVertex3f(  0.0,   0.0 , (width-0.2) /2 + 0.2);
         glVertex3f(xTop0 , yTop0 , (width-0.2) /2);
         glVertex3f(xTop1 , yTop1 , (width-0.2) /2);
@@ -236,10 +250,10 @@ function drawEdges() {
       let fv1 = points[0];
       let fv2 = points[1];
       let fv3 = points[2];
-      let center = new Point3d((fv1.x + fv2.x + fv3.x) /3, (fv1.y + fv2.y + fv3.y) /3, (fv1.z + fv2.z + fv3.z)/3);
+      let center = new Point3d((fv1.x + fv2.x  + fv3.x ) /3, (fv1.y + fv2.y + fv3.y ) /3, (fv1.z + fv2.z + fv3.z)/3);
       let p1 = edge.source.position.combo(0.5, edge.target.position);
       let fvec = p1.minus(center);
-      let fscale = 1.5 * fvec.norm();
+      let fscale = 1.65 * fvec.norm();
       drawEdgeObject(p1, center, f.getNormal(), fscale);
     }
 
@@ -324,7 +338,8 @@ function drawViews() {
      */
 
     // Clear the rendering information.
-    glClearColor(0.2,0.2,0.3);
+    glClearColor(1.0,1.0,1.0);
+    //glClearColor(0.2,0.2,0.3);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
 
