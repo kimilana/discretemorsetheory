@@ -79,7 +79,8 @@ function makeEdgeObject() {
         const xTop1 = Math.cos(aTop + dAngle) * (2 * r);
         const yTop1 = Math.sin(aTop + dAngle) * (2* r);
 
-        glColor3f(0.04, 0.32, 0.59);
+        //glColor3f(0.04, 0.32, 0.59);
+        glColor3f(0.0, 0.0, 0.0);
 
 /*
         if (i % 2 == 0) {
@@ -103,13 +104,16 @@ function makeEdgeObject() {
         const xMid1 = Math.cos(aMid + dAngle) * r;
         const yMid1 = Math.sin(aMid + dAngle) * r;
 
-    glColor3f(0.29, 0.57, 0.87);
-  //glColor3f(1.0, 0.0, 0.0);
+        glColor3f(0.0, 0.0, 0.0);
+    //glColor3f(0.29, 0.57, 0.87);
+//  glColor3f(1.0, 0.0, 0.0);
         glVertex3f(xMid0, yMid0,  width / 2.0);
         glVertex3f(xMid0, yMid0, -width / 2.0);
         glVertex3f(xMid1, yMid1, -width / 2.0);
-    glColor3f(0.04, 0.32, 0.59);
+    //glColor3f(0.04, 0.32, 0.59);
 	  //glColor3f(0.04, 0.32, 0.59);
+    //glColor3f(0.0, 0.0, 0.0);
+    //glColor3f(1.0, 0.8, 0.0);
         glVertex3f(xMid0, yMid0,  width / 2.0);
         glVertex3f(xMid1, yMid1, -width / 2.0);
         glVertex3f(xMid1, yMid1,  width / 2.0);
@@ -123,7 +127,8 @@ function makeEdgeObject() {
         const xBottom1 = Math.cos(aBottom + dAngle) * r;
         const yBottom1 = Math.sin(aBottom + dAngle) * r;
 
-    glColor3f(0.29, 0.57, 0.87);
+    //glColor3f(0.29, 0.57, 0.87);
+      glColor3f(0.0, 0.0, 0.0);
 
 /*
     if (i % 2 == 0) {
@@ -146,8 +151,8 @@ function makeEdgeObject() {
         const xTop1 = Math.cos(aTop + dAngle) * (2 * r);
         const yTop1 = Math.sin(aTop + dAngle) * (2 * r);
 
-  glColor3f(0.04, 0.32, 0.59);
-
+  //glColor3f(0.04, 0.32, 0.59);
+  glColor3f(0.0, 0.0, 0.0);
 
 /*
         if (i % 2 == 0) {

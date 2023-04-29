@@ -966,14 +966,17 @@ forman_gradient() {
         glBegin(GL_TRIANGLES, this.getName(), harlequin);
 
 	    for (let f of this.allFaces()) {
-          glColor3f(0.6, 0.6, 0.6);
+         //glColor3f(0.5, 0.6, 0.7); //blue
+         glColor3f(0.1529, 0.486, 0.43);
+
         /*
             if (harlequin) {
                 glColor3f(0.25*Math.random()*0.25,
 		                  0.25+Math.random()*0.25,
 		                  0.25+Math.random()*0.25);
             }
-            */
+        */
+
 	        f.getNormal().glNormal3fv();
             const ps = f.getPoints();
 	        ps[0].glVertex3fv();
